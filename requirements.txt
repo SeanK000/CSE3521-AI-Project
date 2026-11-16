@@ -1,8 +1,0 @@
-scikit-learn>=1.3
-pandas
-numpy
-scipy
-matplotlib
-joblib
-reportlab
-pillow
