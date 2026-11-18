@@ -1,1 +1,7 @@
 archive.zip
+.venv/
+__pycache__/
+results/artifacts.joblib
+data/*.csv
+models/*.joblib
+tmp/

@@ -1,21 +1,75 @@
 {
   "n_raw": 50000,
-  "n_dedup": 46326,
-  "n_train": 37060,
-  "n_test": 9266,
+  "n_dedup": 46315,
+  "n_train": 37052,
+  "n_test": 9263,
+  "seed": 47,
+  "test_fraction": 0.2,
+  "labels": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "data_quality": {
+    "missing_text": 0,
+    "missing_summary": 2,
+    "invalid_scores_removed": 0,
+    "empty_text_removed": 0,
+    "exact_duplicates_removed": 3674,
+    "cleaning_equivalent_duplicates_removed": 11,
+    "duplicates_removed": 3685,
+    "conflicting_duplicate_groups": 1
+  },
+  "model_settings": {
+    "Linear SVM": {
+      "C": 0.25,
+      "class_weight": "balanced"
+    },
+    "Logistic Regression": {
+      "C": 5,
+      "class_weight": "balanced",
+      "max_iter": 3000
+    },
+    "Multinomial NB": {
+      "alpha": 0.5
+    },
+    "Complement NB": {
+      "alpha": 0.3
+    },
+    "parameter_source": "fixed initial settings; tuning.csv is a separate training-only comparison"
+  },
+  "feature_settings": {
+    "BoW": {
+      "ngram_range": [
+        1,
+        1
+      ],
+      "min_df": 2
+    },
+    "TF-IDF": {
+      "ngram_range": [
+        1,
+        2
+      ],
+      "min_df": 2,
+      "max_df": 0.9,
+      "sublinear_tf": true,
+      "norm": "l2"
+    }
+  },
   "label_counts": {
-    "positive": 36015,
-    "negative": 6844,
+    "positive": 36005,
+    "negative": 6843,
     "neutral": 3467
   },
   "test_label_counts": {
-    "positive": 7204,
+    "positive": 7201,
     "negative": 1369,
     "neutral": 693
   },
-  "bow_vocab": 20838,
-  "tfidf_vocab": 226417,
-  "mean_words": 79.46105858481198,
+  "bow_vocab": 20795,
+  "tfidf_vocab": 226055,
+  "mean_words": 79.44991903271078,
   "median_words": 57.0,
   "confusion": {
     "Majority class": [
@@ -32,75 +86,75 @@
       [
         0,
         0,
-        7204
+        7201
       ]
     ],
     "Multinomial NB": [
       [
-        968,
-        161,
-        240
+        975,
+        163,
+        231
       ],
       [
-        170,
-        249,
-        274
+        165,
+        250,
+        278
       ],
       [
-        297,
-        347,
-        6560
+        322,
+        340,
+        6539
       ]
     ],
     "Complement NB": [
       [
-        795,
-        9,
-        565
+        793,
+        6,
+        570
       ],
       [
         118,
-        28,
-        547
+        31,
+        544
       ],
       [
-        89,
-        13,
-        7102
+        87,
+        7,
+        7107
       ]
     ],
     "Logistic Regression": [
       [
-        1110,
-        141,
-        118
+        1112,
+        144,
+        113
       ],
       [
-        163,
-        320,
-        210
+        175,
+        321,
+        197
       ],
       [
-        185,
-        253,
-        6766
+        204,
+        263,
+        6734
       ]
     ],
     "Linear SVM": [
       [
-        1097,
-        88,
-        184
+        1096,
+        92,
+        181
       ],
       [
-        170,
-        260,
+        174,
+        256,
         263
       ],
       [
-        132,
         145,
-        6927
+        150,
+        6906
       ]
     ]
   }

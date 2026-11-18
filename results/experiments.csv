@@ -1,4 +1,4 @@
-variant,accuracy,macro_f1,neutral_f1,n_features
-baseline: summary+text in one TF-IDF,0.8940211526009065,0.7271382491129597,0.43844856661045534,226417
-separate summary & body TF-IDF,0.8946686812000864,0.7278717823973097,0.44408427876823336,232983
-separate + negation scoping,0.8951003669328729,0.7312806276858467,0.4556354916067146,251463
+variant,evaluation_split,n_train,n_validation,accuracy,macro_f1,neutral_f1,n_features
+baseline: summary+text in one TF-IDF,training-only validation,29641,7411,0.8822021319659965,0.6956733504097151,0.3837953091684435,192148
+separate summary & body TF-IDF,training-only validation,29641,7411,0.8826069356362164,0.7028805585846524,0.39959839357429716,197456
+separate + negation scoping,training-only validation,29641,7411,0.8867899068951558,0.7047978237942828,0.3967446592065107,212124

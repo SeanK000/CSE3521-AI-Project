@@ -1,44 +1,119 @@
-"""Quick follow-up experiments suggested by the error analysis (Linear SVM).
-Run after pipeline.py:  python src/experiments.py"""
-import re, sys, json
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import numpy as np, pandas as pd
+"""Compare optional SVM features on validation data from the training split.
+
+Run with ``python src/experiments.py``. The outer 20% test set is not used to
+choose a variant. Results are written to results/experiments.csv.
+"""
+
+import re
+
+import pandas as pd
 from scipy.sparse import hstack
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import f1_score, accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
-from pipeline import load, clean, SEED, RES
 
-NEG = re.compile(r"\b(?:not|no|never|n't|cannot|isn't|wasn't|don't|doesn't|didn't)\b")
-def neg_scope(t):
-    """Append _NEG to the tokens after a negation word, up to the next punctuation."""
-    out = []
-    for clause in re.split(r"([.,!?;:])", t):
-        toks, on = clause.split(), False
-        for w in toks:
-            out.append(w + "_NEG" if on else w)
-            if NEG.search(w): on = True
-    return " ".join(out)
+from pipeline import LABELS, RES, SEED, clean, load, make_vectorizers, split_data
 
-df, _ = load()
-df["summ"] = df["Summary"].map(clean); df["body"] = df["Text"].map(clean)
-tr, te = train_test_split(df, test_size=0.2, stratify=df.label, random_state=SEED)
-def run(name, Xtr, Xte):
-    m = LinearSVC(C=0.25, class_weight="balanced").fit(Xtr, tr.label); p = m.predict(Xte)
-    r = dict(variant=name, accuracy=accuracy_score(te.label, p), macro_f1=f1_score(te.label, p, average="macro"),
-             neutral_f1=f1_score(te.label, p, labels=["neutral"], average="macro"),
-             n_features=Xtr.shape[1]); print(r); return r
-V = lambda: TfidfVectorizer(ngram_range=(1, 2), min_df=2, max_df=0.9, sublinear_tf=True)
-rows = []
-v = V(); rows.append(run("baseline: summary+text in one TF-IDF", v.fit_transform(tr.doc), v.transform(te.doc)))
-vs, vb = V(), V()
-rows.append(run("separate summary & body TF-IDF", hstack([vs.fit_transform(tr.summ), vb.fit_transform(tr.body)]).tocsr(),
-                hstack([vs.transform(te.summ), vb.transform(te.body)]).tocsr()))
-vs, vb = V(), V()
-trb, teb = tr.body.map(neg_scope), te.body.map(neg_scope)
-trs, tes = tr.summ.map(neg_scope), te.summ.map(neg_scope)
-rows.append(run("separate + negation scoping", hstack([vs.fit_transform(trs), vb.fit_transform(trb)]).tocsr(),
-                hstack([vs.transform(tes), vb.transform(teb)]).tocsr()))
-pd.DataFrame(rows).to_csv(RES / "experiments.csv", index=False)
+TOKENS = re.compile(r"\w+(?:['’]\w+)*|[^\w\s]")
+NEGATION = re.compile(r"(?:not|no|never|cannot|\w+n['’]t)", re.IGNORECASE)
+
+
+def neg_scope(text):
+    """Mark words after a negation token until punctuation ends the scope.
+
+    This is a feature experiment, not a grammatical parser. Contractions retain
+    their apostrophes, including curly apostrophes, so ``can't`` is recognized.
+    """
+    output = []
+    in_scope = False
+    for token in TOKENS.findall(text):
+        if not token[0].isalnum() and token[0] != "_":
+            output.append(token)
+            in_scope = False
+        elif NEGATION.fullmatch(token):
+            output.append(token)
+            in_scope = True
+        else:
+            output.append(f"{token}_NEG" if in_scope else token)
+    return " ".join(output)
+
+
+def clean_with_negation(text):
+    return neg_scope(clean(text))
+
+
+def validation_split(data):
+    """Reserve validation rows inside the shared outer training split."""
+    outer_training, _ = split_data(data)
+    return train_test_split(
+        outer_training,
+        test_size=0.2,
+        stratify=outer_training["label"],
+        random_state=SEED,
+    )
+
+
+def evaluate_variant(name, training_features, validation_features, training, validation):
+    model = LinearSVC(C=0.25, class_weight="balanced", random_state=SEED)
+    model.fit(training_features, training["label"])
+    predictions = model.predict(validation_features)
+    result = {
+        "variant": name,
+        "evaluation_split": "training-only validation",
+        "n_train": len(training),
+        "n_validation": len(validation),
+        "accuracy": accuracy_score(validation["label"], predictions),
+        "macro_f1": f1_score(
+            validation["label"], predictions, labels=LABELS,
+            average="macro", zero_division=0,
+        ),
+        "neutral_f1": f1_score(
+            validation["label"], predictions, labels=["neutral"],
+            average="macro", zero_division=0,
+        ),
+        "n_features": training_features.shape[1],
+    }
+    print(result)
+    return result
+
+
+def run_experiments(training, validation):
+    _, vectorizer = make_vectorizers()
+    results = [evaluate_variant(
+        "baseline: summary+text in one TF-IDF",
+        vectorizer.fit_transform(training["doc"]),
+        vectorizer.transform(validation["doc"]),
+        training, validation,
+    )]
+
+    variants = [
+        ("separate summary & body TF-IDF", clean),
+        ("separate + negation scoping", clean_with_negation),
+    ]
+    for name, preprocess in variants:
+        _, summary_vectorizer = make_vectorizers()
+        _, body_vectorizer = make_vectorizers()
+        training_features = hstack([
+            summary_vectorizer.fit_transform(training["Summary"].map(preprocess)),
+            body_vectorizer.fit_transform(training["Text"].map(preprocess)),
+        ]).tocsr()
+        validation_features = hstack([
+            summary_vectorizer.transform(validation["Summary"].map(preprocess)),
+            body_vectorizer.transform(validation["Text"].map(preprocess)),
+        ]).tocsr()
+        results.append(evaluate_variant(
+            name, training_features, validation_features, training, validation,
+        ))
+    return pd.DataFrame(results)
+
+
+def main():
+    data, _ = load()
+    training, validation = validation_split(data)
+    results = run_experiments(training, validation)
+    RES.mkdir(exist_ok=True)
+    results.to_csv(RES / "experiments.csv", index=False)
+
+
+if __name__ == "__main__":
+    main()
