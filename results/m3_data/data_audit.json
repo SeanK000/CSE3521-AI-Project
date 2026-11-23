@@ -1,0 +1,225 @@
+{
+  "base_commit": "ee71c7e2d0d23edf4d92f9f036d1568d747ec68a",
+  "sample_sha256": "57729385c4f7c892fbd8abfdb496897d24fedcfdaa90196f15345bca08e9cb20",
+  "source_files": {
+    "src/pipeline.py": "252abacda11326f29a6bee8d699dc709444ff076fef18857b2f32a03a6b7ed91",
+    "src/experiments.py": "a86ef4b332dd6aa93e42ea5f3af767a1c99e24e8902071f8d0e634596ae53106",
+    "results/summary.json": "5fdfb83c0e655f922535f80a63f88560de9c8017a29f46f8906d49c82f7fc1fd",
+    "results/test_predictions.csv": "c37ba15a91b01dc154e6ecf59a3fef6e662d62fe73f0114ec7a296ea81c6d30e"
+  },
+  "n_raw": 50000,
+  "n_retained": 46315,
+  "seed": 47,
+  "label_to_id": {
+    "negative": 0,
+    "neutral": 1,
+    "positive": 2
+  },
+  "m2_data_quality": {
+    "missing_text": 0,
+    "missing_summary": 2,
+    "invalid_scores_removed": 0,
+    "empty_text_removed": 0,
+    "exact_duplicates_removed": 3674,
+    "cleaning_equivalent_duplicates_removed": 11,
+    "duplicates_removed": 3685,
+    "conflicting_duplicate_groups": 1
+  },
+  "splits": {
+    "outer_train": {
+      "rows": 37052,
+      "labels": {
+        "negative": 5474,
+        "neutral": 2774,
+        "positive": 28804
+      }
+    },
+    "test": {
+      "rows": 9263,
+      "labels": {
+        "negative": 1369,
+        "neutral": 693,
+        "positive": 7201
+      }
+    },
+    "inner_train": {
+      "rows": 29641,
+      "labels": {
+        "negative": 4379,
+        "neutral": 2219,
+        "positive": 23043
+      }
+    },
+    "validation": {
+      "rows": 7411,
+      "labels": {
+        "negative": 1095,
+        "neutral": 555,
+        "positive": 5761
+      }
+    }
+  },
+  "m2_baseline_dimensions": {
+    "bow": 20795,
+    "tfidf": 226055
+  },
+  "m2_test_ids_and_order_match": true,
+  "outer_id_overlap": 0,
+  "outer_clean_body_overlap": 0,
+  "inner_id_overlap": 0,
+  "cv_folds": 3,
+  "test_rows_in_cv": 0,
+  "candidate_features": {
+    "combined": {
+      "fit_split": "inner_train",
+      "fit_rows": 29641,
+      "inner_train_shape": [
+        29641,
+        192148
+      ],
+      "validation_shape": [
+        7411,
+        192148
+      ],
+      "block_sizes": {
+        "combined": 192148
+      },
+      "inner_train_nonzero": 3454159,
+      "validation_nonzero": 809508,
+      "zero_inner_train_rows": 0,
+      "zero_validation_rows": 0
+    },
+    "separate": {
+      "fit_split": "inner_train",
+      "fit_rows": 29641,
+      "inner_train_shape": [
+        29641,
+        197456
+      ],
+      "validation_shape": [
+        7411,
+        197456
+      ],
+      "block_sizes": {
+        "summary": 13540,
+        "body": 183916
+      },
+      "inner_train_nonzero": 3483278,
+      "validation_nonzero": 815876,
+      "zero_inner_train_rows": 0,
+      "zero_validation_rows": 0
+    },
+    "separate_negation": {
+      "fit_split": "inner_train",
+      "fit_rows": 29641,
+      "inner_train_shape": [
+        29641,
+        212124
+      ],
+      "validation_shape": [
+        7411,
+        212124
+      ],
+      "block_sizes": {
+        "summary": 14061,
+        "body": 198063
+      },
+      "inner_train_nonzero": 3525892,
+      "validation_nonzero": 822438,
+      "zero_inner_train_rows": 0,
+      "zero_validation_rows": 0
+    },
+    "separate_negation_contrast": {
+      "fit_split": "inner_train",
+      "fit_rows": 29641,
+      "inner_train_shape": [
+        29641,
+        376454
+      ],
+      "validation_shape": [
+        7411,
+        376454
+      ],
+      "block_sizes": {
+        "summary": 14061,
+        "body": 198063,
+        "contrast_before": 103004,
+        "contrast_after": 61326
+      },
+      "inner_train_nonzero": 5635348,
+      "validation_nonzero": 1303311,
+      "zero_inner_train_rows": 0,
+      "zero_validation_rows": 0
+    }
+  },
+  "inner_training_rule_coverage": {
+    "negative": {
+      "rows": 4379,
+      "negation_marker_rows": 3613,
+      "contrast_rule_rows": 2458
+    },
+    "neutral": {
+      "rows": 2219,
+      "negation_marker_rows": 1777,
+      "contrast_rule_rows": 1724
+    },
+    "positive": {
+      "rows": 23043,
+      "negation_marker_rows": 13643,
+      "contrast_rule_rows": 10300
+    }
+  },
+  "training_contrast_examples": [
+    {
+      "Id": 47,
+      "label": "positive",
+      "before": "good oatmeal. i like the apple cinnamon the best.",
+      "after": "i wouldn't follow the directions on the package since it always comes out too soupy for my taste. that could just be me since i like my oatmeal really thick to add some milk on top of."
+    },
+    {
+      "Id": 87,
+      "label": "positive",
+      "before": "my dog has a ton of allergies both environmental and food. she was on a prescription dog food before we had her tested to see what allergies she has. after we got the test back, we learned she was allergic to something in the prescription b",
+      "after": "i am happy she can finally eat something i know won't cause her pain."
+    },
+    {
+      "Id": 130,
+      "label": "neutral",
+      "before": "i love spicy ramen,",
+      "after": "for whatever reasons this thing burns my stomach badly and the burning sensation doesn't go away for like 3 hours! not sure if that is healthy or not .... and you can buy this at walmart for $0.28, way cheaper than amazon."
+    },
+    {
+      "Id": 401,
+      "label": "neutral",
+      "before": "i love the flour however amazon sent it with a book which broke a bag and made a mess. customer sevice took care of the problem",
+      "after": "it was a foolish way to ship the product."
+    },
+    {
+      "Id": 873,
+      "label": "negative",
+      "before": "this product must qualify for some sort of deceptive packaging award. the box only contains 5 bars and the wrappers are smaller than normal, so at least 50% of the interior of the box is air. then when you unwrap the bar you find they are o",
+      "after": "it is some of the worst food i've ever had. the \"clusters\" are hard as the partially popped kernels at the bottom of your bag of popcorn and more fitting for gerbils than people. all in all i would not recommend enjoy life foods."
+    },
+    {
+      "Id": 1251,
+      "label": "negative",
+      "before": "so disappointed with this frosting. the first time i used this frosting i was disappointed, but a year has gone by and i thought that maybe i had gotten a bad container. i really should have thought twice about buying it again,",
+      "after": "i wanted to give pillsbury the benefit of the doubt. boy was i wrong in doing that. both times that i used it, the frosting pretty much 'sagged' off of the cake! my cakes were definitely cooled. i had even put the latest one in the freezer "
+    }
+  ],
+  "software": {
+    "pandas": "3.1.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "joblib": "1.6.0"
+  },
+  "python": "3.12.14",
+  "model_training_performed": false,
+  "test_predictions_performed": false,
+  "pending": [
+    "Model trainers: training-only feature comparisons and selection",
+    "ML engineer: deep-model/tokenizer choice and maximum sequence length",
+    "App engineer: integrate the selected model with its matching transformer"
+  ]
+}

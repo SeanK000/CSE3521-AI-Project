@@ -5,3 +5,4 @@ results/artifacts.joblib
 data/*.csv
 models/*.joblib
 tmp/
+data/m3/

@@ -1,0 +1,17 @@
+{
+  "checksums_verified": 19,
+  "m2_baseline_files_unchanged": true,
+  "m2_test_ids_labels_and_order_match": true,
+  "train_test_id_and_clean_body_overlap": 0,
+  "inner_train_validation_id_overlap": 0,
+  "cv_folds_train_only": true,
+  "first_three_vocab_sizes_match_m2_experiments": true,
+  "matrix_verification": {
+    "combined": "All rows match reloaded transformer and ordered labels",
+    "separate": "All rows match reloaded transformer and ordered labels",
+    "separate_negation": "All rows match reloaded transformer and ordered labels",
+    "separate_negation_contrast": "All rows match reloaded transformer and ordered labels"
+  },
+  "model_training_performed": false,
+  "held_out_test_scoring_performed": false
+}

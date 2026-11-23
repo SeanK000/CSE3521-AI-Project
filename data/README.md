@@ -17,3 +17,10 @@ before creating a stratified 80/20 train/test split, also with seed 47.
 The original root-level sample has been moved here locally and removed from the
 current checkout's root. It will still exist in old Git commits; this cleanup
 does not rewrite repository history.
+
+For M3, `python src/prepare_m3_data.py` creates ignored `data/m3/` artifacts:
+raw/cleaned review records, ordered labels, split/CV manifests, a duplicate
+audit, and four inner-training/validation feature variants. Do not commit this
+directory or the source CSV. Use `python src/verify_m3_data.py` to check the
+prepared artifacts. See [the handoff](../docs/M3_DATA_ENGINEERING.md) for the
+data contract, setup commands, and loading examples.

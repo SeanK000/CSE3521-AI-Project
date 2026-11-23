@@ -50,3 +50,23 @@ higher macro F1. Training times cover classifier fitting only and vary by machin
 
 Full metrics, confusion matrices, predictions, and error examples are described
 in [results/README.md](results/README.md).
+
+## Milestone 3 data engineering
+
+The [data-engineering handoff](docs/M3_DATA_ENGINEERING.md) preserves the M2
+sample and splits, packages summary/body and negation features, and adds a
+contrast-clause candidate. Reproduce the data artifacts from the repository root:
+
+```bash
+python -m pip install -r requirements-data.txt
+python src/prepare_m3_data.py
+python -m unittest discover -s tests -v
+python src/verify_m3_data.py
+```
+
+Use Python 3.12 in a virtual environment and the unchanged shared sample. Large
+generated data and feature artifacts stay local in ignored `data/m3/`; compact
+audits are in `results/m3_data/`. Candidate vocabularies are fitted on inner
+training only. The handoff documents training-only CV use and raw inputs for the
+modern model. Model owners still need to compare/select candidates and train
+the M3 models; these data commands do not train classifiers or update the app.
