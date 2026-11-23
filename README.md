@@ -53,7 +53,7 @@ in [results/README.md](results/README.md).
 
 ## Milestone 3 data engineering
 
-The [data-engineering handoff](docs/M3_DATA_ENGINEERING.md) preserves the M2
+M3 preserves the M2
 sample and splits, packages summary/body and negation features, and adds a
 contrast-clause candidate. Reproduce the data artifacts from the repository root:
 
