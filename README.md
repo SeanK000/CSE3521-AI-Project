@@ -68,5 +68,23 @@ Use Python 3.12 in a virtual environment and the unchanged shared sample. Large
 generated data and feature artifacts stay local in ignored `data/m3/`; compact
 audits are in `results/m3_data/`. Candidate vocabularies are fitted on inner
 training only. The handoff documents training-only CV use and raw inputs for the
-modern model. Model owners still need to compare/select candidates and train
-the M3 models; these data commands do not train classifiers or update the app.
+modern model. These data commands do not train classifiers or update the app;
+the DistilBERT section below covers the modern model. Model owners still need
+to compare/select feature candidates.
+
+### DistilBERT model (M3)
+
+The deep model is a separate optional stack because PyTorch is large:
+
+```bash
+python -m pip install -r requirements-model.txt
+python src/distilbert_model.py
+```
+
+It fine-tunes `distilbert-base-uncased` with DistilBERT's `(Summary, Text)`
+sentence-pair input, selects the epoch on the training-only validation split,
+refits on all outer training reviews, and scores the held-out test split once.
+The model is saved to the ignored `models/distilbert/`; metrics, predictions,
+loss history, and the loss curve go to `results/m3_distilbert/` and
+`figures/distilbert_loss.png`. See
+[docs/M3_DISTILBERT.md](docs/M3_DISTILBERT.md) for the protocol and options.
