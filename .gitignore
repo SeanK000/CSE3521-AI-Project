@@ -4,5 +4,6 @@ __pycache__/
 results/artifacts.joblib
 data/*.csv
 models/*.joblib
+models/distilbert/
 tmp/
 data/m3/
