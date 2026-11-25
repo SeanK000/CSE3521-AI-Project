@@ -1,0 +1,6 @@
+# Optional DistilBERT fine-tuning stack (not needed for the classical M2 scripts).
+# Install the CUDA build of torch first if a GPU is available; see pytorch.org.
+-r requirements.txt
+torch>=2.4
+transformers>=4.46
+safetensors>=0.4
