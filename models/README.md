@@ -4,6 +4,10 @@ Run `python src/pipeline.py` from the project folder to create
 `models/artifacts.joblib`. This file contains the fitted vectorizers and models,
 plus the training features used by the analysis scripts.
 
+Run `python src/train_m3.py` to create `models/m3_models.joblib`. The
+Streamlit app uses this bundle for the selected classical model and the
+feedforward network. Each entry includes the preprocessing fitted for that model.
+
 Run `python src/distilbert_model.py` (after installing
 `requirements-model.txt`) to create `models/distilbert/` with the fine-tuned
 DistilBERT weights, tokenizer, and run metadata.

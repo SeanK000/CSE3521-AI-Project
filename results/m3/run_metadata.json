@@ -1,0 +1,20 @@
+{
+  "split_source": "prepared M3 artifacts",
+  "split_rows": {
+    "outer_train": 37052,
+    "test": 9263,
+    "inner_train": 29641,
+    "validation": 7411
+  },
+  "sample_sha256_lf": "57729385c4f7c892fbd8abfdb496897d24fedcfdaa90196f15345bca08e9cb20",
+  "python": "3.15.2",
+  "packages": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.9.1"
+  },
+  "primary_model": "M3 Logistic Regression",
+  "primary_selection": "highest training-only validation macro F1 among M3 models",
+  "timing": "classifier fitting and prediction only, excluding preprocessing"
+}

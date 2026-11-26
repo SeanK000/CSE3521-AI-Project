@@ -32,11 +32,22 @@ BASELINE_FILES = ["src/pipeline.py", "src/experiments.py", "results/summary.json
 
 
 def file_hash(path):
+    """Hash exact bytes, including line endings, for generated artifacts."""
     digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def text_hash(path):
+    """Hash shared text content with CRLF normalized to LF.
+
+    Git checkouts and CSV copies may change line endings on Windows. Preserve
+    every other byte so edited reviews, labels, or source still fail the lock.
+    Generated feature files use the byte-exact file_hash instead.
+    """
+    return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def body_hash(text):
@@ -110,9 +121,11 @@ def verify_m2(clean, outer_train, test, n_raw):
 
 def prepare(sample, output_dir, report_dir):
     sample, output_dir, report_dir = Path(sample), Path(output_dir), Path(report_dir)
-    if file_hash(sample) != SAMPLE_SHA256:
+    sample_hash = text_hash(sample)
+    if sample_hash != SAMPLE_SHA256:
         raise ValueError("Input is not the locked seed-47 team sample; use the unchanged original CSV.")
-    original_hashes = {name: file_hash(ROOT / name) for name in BASELINE_FILES}
+    original_hashes = {name: text_hash(ROOT / name) for name in BASELINE_FILES}
+    original_bytes = {name: file_hash(ROOT / name) for name in BASELINE_FILES}
     old_data = pipeline.DATA
     try:
         pipeline.DATA = sample
@@ -132,7 +145,7 @@ def prepare(sample, output_dir, report_dir):
 
     print("Verified M2 data and exact held-out test IDs/order.", flush=True)
     manifest = make_manifests(clean, outer_train, test, inner_train, validation)
-    manifest.to_csv(output_dir / "split_manifest.csv", index=False)
+    manifest.to_csv(output_dir / "split_manifest.csv", index=False, lineterminator="\n")
     data = clean[["Id", "Summary", "Text", "clean_body", "doc", "label", "n_words"]].copy()
     data["label_id"] = data.label.map(LABEL_TO_ID)
     data.to_json(output_dir / "reviews.jsonl", orient="records", lines=True, force_ascii=False)
@@ -140,9 +153,9 @@ def prepare(sample, output_dir, report_dir):
     for name, frame in split_frames.items():
         labels = frame[["Id", "label"]].copy()
         labels["label_id"] = labels.label.map(LABEL_TO_ID)
-        labels.to_csv(output_dir / f"{name}_labels.csv", index=False)
+        labels.to_csv(output_dir / f"{name}_labels.csv", index=False, lineterminator="\n")
     duplicates = duplicate_audit(pd.read_csv(sample))
-    duplicates.to_csv(output_dir / "duplicate_audit.csv", index=False)
+    duplicates.to_csv(output_dir / "duplicate_audit.csv", index=False, lineterminator="\n")
 
     # Structural compatibility only. No M2 classifier retraining or test scoring.
     bow, tfidf = pipeline.make_vectorizers()
@@ -194,7 +207,7 @@ def prepare(sample, output_dir, report_dir):
     role_counts = {name: {"rows": len(frame), "labels": counts(frame)} for name, frame in split_frames.items()}
     software = {name: version(name) for name in ["pandas", "numpy", "scipy", "scikit-learn", "joblib"]}
     audit = {
-        "base_commit": BASE_COMMIT, "sample_sha256": file_hash(sample),
+        "base_commit": BASE_COMMIT, "sample_sha256": sample_hash,
         "source_files": original_hashes, "n_raw": n_raw, "n_retained": len(clean),
         "seed": pipeline.SEED, "label_to_id": LABEL_TO_ID,
         "m2_data_quality": clean.attrs["data_quality"], "splits": role_counts,
@@ -210,11 +223,11 @@ def prepare(sample, output_dir, report_dir):
                     "App engineer: integrate the selected model with its matching transformer"],
     }
     # Verify this data-only run left all baseline evidence untouched.
-    assert original_hashes == {name: file_hash(ROOT / name) for name in BASELINE_FILES}
+    assert original_bytes == {name: file_hash(ROOT / name) for name in BASELINE_FILES}
     (report_dir / "data_audit.json").write_text(json.dumps(audit, indent=2), encoding="utf-8")
-    contract = {"base_commit": BASE_COMMIT, "sample_sha256": file_hash(sample),
+    contract = {"base_commit": BASE_COMMIT, "sample_sha256": sample_hash,
                 "label_to_id": LABEL_TO_ID, "software": software,
-                "files": {str(path.relative_to(output_dir)): file_hash(path)
+                "files": {path.relative_to(output_dir).as_posix(): file_hash(path)
                           for path in sorted(output_dir.rglob("*")) if path.is_file() and path.name != "artifact_manifest.json"}}
     (output_dir / "artifact_manifest.json").write_text(json.dumps(contract, indent=2), encoding="utf-8")
     print(json.dumps({"splits": role_counts, "candidates": candidates}, indent=2))

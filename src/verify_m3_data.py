@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 
-from prepare_m3_data import ROOT, DEFAULT_OUTPUT, load_split, file_hash, LABEL_TO_ID
+from prepare_m3_data import ROOT, DEFAULT_OUTPUT, load_split, file_hash, text_hash, LABEL_TO_ID
 from m3_features import VARIANTS
 
 
@@ -20,7 +20,7 @@ def verify(output, report_dir):
         if file_hash(output / name) != expected:
             raise ValueError(f"Artifact checksum mismatch: {name}")
     for name, expected in audit["source_files"].items():
-        assert file_hash(ROOT / name) == expected, f"M2 baseline changed: {name}"
+        assert text_hash(ROOT / name) == expected, f"M2 baseline changed: {name}"
 
     split = {name: load_split(output, name) for name in ["outer_train", "test", "inner_train", "validation"]}
     for name, frame in split.items():

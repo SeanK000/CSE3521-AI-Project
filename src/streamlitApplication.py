@@ -7,9 +7,11 @@ import joblib
 import pandas as pd
 import streamlit as st
 
-from pipeline import ARTIFACTS, clean # calls from pipeline
+from pipeline import ARTIFACTS, ROOT, clean
 
-# New models can be added here if needed
+M3_ARTIFACTS = ROOT / "models" / "m3_models.joblib"
+
+# M2 baselines retain their original fitted vectorizers.
 MODEL_FEATURES = {
     "Majority class": "bow",
     "Multinomial NB": "bow",
@@ -29,8 +31,12 @@ def load_models(path, modified_ns):
     return joblib.load(path)
 
 
-def get_predictions(artifacts, document):
-    """Generate predictions using models."""
+def get_predictions(artifacts, document, m3_artifacts=None, review_frame=None):
+    """Predict with M2 baselines and each M3 model's saved preprocessing.
+
+    M3 transformers receive raw Summary/Text columns, just as in training.
+    A broken or unavailable model does not prevent the other models predicting.
+    """
 
     predictions = []
 
@@ -78,10 +84,25 @@ def get_predictions(artifacts, document):
                 f"{model_name} could not predict: {error}"
             )
 
+    if m3_artifacts and review_frame is not None:
+        for model_name, entry in m3_artifacts.get("models", {}).items():
+            try:
+                features = entry["transformer"].transform(review_frame)
+                if hasattr(features, "nnz") and features.nnz == 0:
+                    continue
+                sentiment = entry["model"].predict(features)[0]
+                predictions.append({
+                    "Model": model_name,
+                    "Feature Type": entry.get("feature_label", "M3 features"),
+                    "Prediction": str(sentiment).capitalize(),
+                })
+            except Exception as error:
+                st.warning(f"{model_name} could not predict: {error}")
+
     return predictions
 
 
-def display_results(predictions):
+def display_results(predictions, primary_model="Linear SVM"):
     """Display model results and comparisons."""
 
     df = pd.DataFrame(predictions)
@@ -89,13 +110,8 @@ def display_results(predictions):
     st.divider()
     st.header("Sentiment Analysis Results")
 
-    primary = next(
-        (
-            p for p in predictions
-            if p["Model"] == "Linear SVM"
-        ),
-        predictions[0]
-    )
+    by_name = {prediction["Model"]: prediction for prediction in predictions}
+    primary = by_name.get(primary_model, by_name.get("Linear SVM", predictions[0]))
 
     sentiment = primary["Prediction"]
 
@@ -126,7 +142,7 @@ def display_results(predictions):
 
     st.dataframe(
         df,
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
 
@@ -172,7 +188,10 @@ def main():
 
     st.divider()
 
-    # Sidebar information
+    artifacts = {}
+    m3_artifacts = {}
+
+    # Each bundle is optional so the app also works with only M2 or only M3.
     with st.sidebar:
 
         st.header("Project Information")
@@ -182,26 +201,31 @@ def main():
             "models trained on Amazon Fine Food Reviews."
         )
 
-        st.subheader("Available Models")
-
-        if ARTIFACTS.is_file():
-
+        for title, path in (("M3 models", M3_ARTIFACTS), ("M2 baselines", ARTIFACTS)):
+            st.subheader(title)
+            if not path.is_file():
+                st.info(f"{title} have not been trained on this computer.")
+                continue
             try:
-                artifacts = load_models(
-                    str(ARTIFACTS),
-                    ARTIFACTS.stat().st_mtime_ns
-                )
-
-                models = artifacts.get("models", {})
-
-                for name in models:
+                bundle = load_models(str(path), path.stat().st_mtime_ns)
+                if not isinstance(bundle, dict) or not isinstance(bundle.get("models"), dict):
+                    raise ValueError("Model bundle must contain a models dictionary.")
+                if path == M3_ARTIFACTS:
+                    m3_artifacts = bundle
+                else:
+                    artifacts = bundle
+                for name in bundle["models"]:
                     st.write(f"• {name}")
-
             except Exception as error:
-                st.error(f"Could not load models: {error}")
+                st.error(f"Could not load {title}: {error}")
 
-        else:
-            st.info("No trained models found yet.")
+        if not m3_artifacts.get("models") or not artifacts.get("models"):
+            with st.expander("Model setup"):
+                st.write("Run these commands from the project folder to build missing models.")
+                if not m3_artifacts.get("models"):
+                    st.code("python src/train_m3.py", language="bash")
+                if not artifacts.get("models"):
+                    st.code("python src/pipeline.py", language="bash")
 
         st.divider()
 
@@ -246,36 +270,22 @@ def main():
         st.warning("Please enter a review.")
         return
 
-    if not ARTIFACTS.is_file():
-
-        st.error("Trained model artifacts not found.")
-
-        st.write(
-            "Run the team's training pipeline "
-            "before making predictions."
-        )
-
-        st.code(
-            "python src/pipeline.py",
-            language="bash"
-        )
-
+    if not artifacts.get("models") and not m3_artifacts.get("models"):
+        st.error("No trained models are available. See Model setup in the sidebar.")
         return
 
     try:
 
-        artifacts = load_models(
-            str(ARTIFACTS),
-            ARTIFACTS.stat().st_mtime_ns
-        )
-
         document = clean(
             f"{summary} . {review}"
         )
+        review_frame = pd.DataFrame({"Summary": [summary], "Text": [review]})
 
         predictions = get_predictions(
             artifacts,
-            document
+            document,
+            m3_artifacts=m3_artifacts,
+            review_frame=review_frame,
         )
 
         if not predictions:
@@ -287,7 +297,10 @@ def main():
 
             return
 
-        display_results(predictions)
+        display_results(
+            predictions,
+            primary_model=m3_artifacts.get("primary_model", "Linear SVM"),
+        )
 
     except Exception as error:
 

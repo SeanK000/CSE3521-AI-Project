@@ -1,0 +1,69 @@
+{
+  "n": 9263,
+  "labels": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "accuracy": 0.8583612220662852,
+  "macro_f1": 0.7073651635504746,
+  "weighted_f1": 0.8700517660349553,
+  "confusion_matrix": [
+    [
+      1039,
+      237,
+      93
+    ],
+    [
+      154,
+      393,
+      146
+    ],
+    [
+      192,
+      490,
+      6519
+    ]
+  ],
+  "per_class": {
+    "negative": {
+      "precision": 0.7501805054151625,
+      "recall": 0.7589481373265157,
+      "f1": 0.7545388525780683,
+      "support": 1369
+    },
+    "neutral": {
+      "precision": 0.3508928571428571,
+      "recall": 0.5670995670995671,
+      "f1": 0.4335355763927192,
+      "support": 693
+    },
+    "positive": {
+      "precision": 0.9646345072506659,
+      "recall": 0.9052909318150257,
+      "f1": 0.9340210616806361,
+      "support": 7201
+    }
+  },
+  "loss": 0.37618568539619446,
+  "model": "M3 Feedforward Neural Network",
+  "features": "TF-IDF with chi-square selection",
+  "fit_seconds": 2.940714200012735,
+  "feature_fit_seconds": 3.2360599000094226,
+  "selection_seconds": 6.928229900004226,
+  "predict_ms_per_1k": 0.7299255100073351,
+  "best_epoch": 4,
+  "validation_macro_f1": 0.6983145835883903,
+  "hidden_layers": [
+    64,
+    32
+  ],
+  "feature_percentile": 6,
+  "features_retained": 13564,
+  "batch_size": 512,
+  "max_epochs": 12,
+  "patience": 3,
+  "seed": 47,
+  "macro_precision": 0.6885692899362285,
+  "macro_recall": 0.743779545413703
+}

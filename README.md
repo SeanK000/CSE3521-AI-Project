@@ -44,9 +44,9 @@ python -m streamlit run src/streamlitApplication.py
 | Logistic Regression | TF-IDF 1-2 gram | 88.17% | 0.725 | 4.83 s |
 | **Linear SVM** | TF-IDF 1-2 gram | **89.15%** | **0.722** | **0.66 s** |
 
-Linear SVM is the current app model: it has the highest test accuracy and trains
-faster than Logistic Regression in this run. Logistic Regression has slightly
-higher macro F1. Training times cover classifier fitting only and vary by machine.
+Linear SVM is the most accurate M2 model and trains faster than Logistic
+Regression in this run. Logistic Regression has slightly higher macro F1.
+Training times cover classifier fitting only and vary by machine.
 
 Full metrics, confusion matrices, predictions, and error examples are described
 in [results/README.md](results/README.md).
@@ -67,14 +67,40 @@ python src/verify_m3_data.py
 Use Python 3.12 in a virtual environment and the unchanged shared sample. Large
 generated data and feature artifacts stay local in ignored `data/m3/`; compact
 audits are in `results/m3_data/`. Candidate vocabularies are fitted on inner
-training only. The handoff documents training-only CV use and raw inputs for the
-modern model. These data commands do not train classifiers or update the app;
-the DistilBERT section below covers the modern model. Model owners still need
-to compare/select feature candidates.
+training only. The shared sample checksum accepts LF and CRLF line endings.
 
-### DistilBERT model (M3)
+### Train and run M3
 
-The deep model is a separate optional stack because PyTorch is large:
+From the repository root, with the shared sample in `data/` and the dependencies
+from `requirements.txt` installed:
+
+```bash
+python src/train_m3.py
+python -m streamlit run src/streamlitApplication.py
+```
+
+The group compares four feature variants with Linear SVM and Logistic
+Regression using validation macro F1. The feedforward model uses selected
+TF-IDF features and two ReLU hidden layers (64 and 32 units). It selects its
+training length by validation macro F1. Both selected models are fitted on the
+37,052 outer training reviews and evaluated on the original 9,263 test reviews.
+The trainer uses prepared splits when available and recreates them from the
+locked sample otherwise.
+
+The app loads the two M3 models from `models/m3_models.joblib`. If the M2
+bundle is available, it also includes the classical baselines.
+
+- [Unified test comparison](results/m3/model_comparison.csv) and
+  [confusion matrices](results/m3/confusion_matrices.json)
+- [Classical validation comparison](results/m3_classical/validation_comparison.csv)
+  and [test metrics](results/m3_classical/test_metrics.json)
+- [Neural test metrics](results/m3_neural/test_metrics.json),
+  [epoch history](results/m3_neural/history.csv), and
+  [training and validation curves](figures/m3_neural_loss.png)
+
+### Optional DistilBERT experiment
+
+DistilBERT can be trained separately with its optional PyTorch stack:
 
 ```bash
 python -m pip install -r requirements-model.txt
